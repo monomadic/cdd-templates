@@ -1,11 +1,13 @@
+import { APIClient, HTTPClient } from "./Client";
 
-type Int = number
+export module APIBase {}
+export type Int = number
 
-class ResponceEmpty {
+export class ResponceEmpty {
 
 }
 
-class APIRequest<ResponseType,ErrorType> {
+export class APIRequest<ResponseType,ErrorType> {
     path(): string {
         return ""
     }
@@ -15,21 +17,14 @@ class APIRequest<ResponseType,ErrorType> {
     }
 
 
-    public send(onSuccess:(result:ResponseType)=>void, onError:(error:ErrorType)=>void) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(this.method(), this.path(), true);
-        if (onSuccess) xhr.onload = function() { 
-            try {
-                onSuccess(JSON.parse(this.responseText)); 
-            }
-            catch (e) {
-                
-            }
-            
-        };
-    
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify(this));
+    public send(client:APIClient = new HTTPClient(), onSuccess:(result:ResponseType)=>void, onError:(error:Error)=>void) {
+        let headers = new Map<string, string>(); 
+        headers.set('Content-Type', 'application/json');
+        client.send(this.path(),headers,JSON.stringify(this),this.method(),(result)=>{
+            onSuccess(JSON.parse(result)); 
+        },(error) => {
+            onError(error)
+        })
     }    
 }
 
@@ -44,4 +39,5 @@ function httpCall(method: string, url:string, data:any, callback:(result:any)=>a
         xhr.send(JSON.stringify(data));
     }
     else xhr.send();
+}
 }
